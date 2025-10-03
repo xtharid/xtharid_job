@@ -1,4 +1,8 @@
 from peewee import *
+import os
+
+# Create data directory if it doesn't exist
+os.makedirs("data", exist_ok=True)
 
 db = SqliteDatabase("data/scraper.db")
 

@@ -52,5 +52,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: scraper-database
-          path: scapper/scraper.db
+          path: scapper/data/scraper.db
           retention-days: 30
