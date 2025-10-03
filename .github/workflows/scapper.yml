@@ -3,8 +3,12 @@ name: Scraper
 
 on:
   schedule:
-    - cron: '*/30 * * * *' # every 30 minutes
+    - cron: '0,30 * * * *' # every 30 minutes at :00 and :30
   workflow_dispatch:
+
+concurrency:
+  group: database-operations
+  cancel-in-progress: false
 
 jobs:
   scrape:
@@ -43,6 +47,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          git pull --rebase origin main
           git add .
           git commit -m "Auto-update: Scraped data $(date '+%Y-%m-%d %H:%M:%S')"
           git push
