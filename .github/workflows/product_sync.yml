@@ -1,5 +1,5 @@
-# .github/workflows/scraper.yml
-name: Scraper
+# .github/workflows/product_sync.yml
+name: Product Sync
 
 on:
   schedule:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  scrape:
+  sync_products:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -25,9 +25,12 @@ jobs:
         run: |
           pip install requests peewee
 
-      - name: Run scraper
+      - name: Run product sync
+        env:
+          XT_XARID_LOGIN: ${{ secrets.XT_XARID_LOGIN }}
+          XT_XARID_PASSWORD: ${{ secrets.XT_XARID_PASSWORD }}
         run: |
-          python scapper/scraper.py
+          python create_products/product_sync.py
 
       - name: Check for changes
         id: check_changes
@@ -44,12 +47,12 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
-          git commit -m "Auto-update: Scraped data $(date '+%Y-%m-%d %H:%M:%S')"
+          git commit -m "Auto-sync: Product sync completed $(date '+%Y-%m-%d %H:%M:%S')"
           git push
 
       - name: Upload database as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: scraper-database
+          name: product-sync-database
           path: data/scraper.db
           retention-days: 30
