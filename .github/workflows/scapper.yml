@@ -3,7 +3,7 @@ name: Scraper
 
 on:
   schedule:
-    - cron: '0 */1 * * *' # every hour at minute 0
+    - cron: '*/30 * * * *' # every 30 minutes
   workflow_dispatch:
 
 jobs:
