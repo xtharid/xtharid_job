@@ -50,9 +50,9 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git pull --rebase origin main
           git add .
           git commit -m "Auto-sync: Product sync completed $(date '+%Y-%m-%d %H:%M:%S')"
+          git pull origin main
           git push
 
       - name: Upload database as artifact
