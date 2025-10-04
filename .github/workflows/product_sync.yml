@@ -1,10 +1,10 @@
 # .github/workflows/product_sync.yml
 name: Product Sync
 
-on:
-  schedule:
-    - cron: '15,45 * * * *' # every 30 minutes at :15 and :45
-  workflow_dispatch:
+# on:
+#   schedule:
+#     - cron: '15,45 * * * *' # every 30 minutes at :15 and :45
+#   workflow_dispatch:
 
 concurrency:
   group: database-operations
