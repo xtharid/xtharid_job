@@ -150,3 +150,37 @@ class APIClient:
             }
         }
         return self.send_request("/urpc", payload, use_auth=True)
+
+    def fetch_product(self, proc_id: str) -> Dict[str, Any]:
+        """Fetch a product by procedure ID (requires authentication)."""
+        if not self.access_token and not self.refresh_token_value:
+            raise Exception("No access token available. Call auth_token() first.")
+            
+        payload = {
+            "id": 1,
+            "jsonrpc": "2.0",
+            "method": "get_proc",
+            "params": {
+                "proc_id": proc_id
+            }
+        }
+        return self.send_request("/urpc", payload, use_auth=True)
+
+    def update_product_field(self, proc_id: int, field_id: str, field_value: str) -> Dict[str, Any]:
+        """Update a specific field of a product by procedure ID (requires authentication)."""
+        if not self.access_token and not self.refresh_token_value:
+            raise Exception("No access token available. Call auth_token() first.")
+            
+        payload = {
+            "id": 1,
+            "jsonrpc": "2.0",
+            "method": "upd_value",
+            "params": {
+                "proc_id": proc_id,
+                "field": {
+                    "id": field_id,
+                    "value": field_value
+                }
+            }
+        }
+        return self.send_request("/urpc", payload, use_auth=True)
