@@ -527,7 +527,7 @@ def start_field_updates():
         login=login,
         password=password,
         client_id="af36f6cbc",  # Hardcoded client_id
-        products_per_batch=5  # Fetch only 5 products as requested
+        products_per_batch=1  # Fetch only 5 products as requested
     )
     results = updater.process_product_updates(delay_between_requests=10.0, delay_between_fields=0.5)
     print("Field updates completed:", results)
