@@ -249,8 +249,10 @@ class ProductSync:
 # Application entry point
 def start_sync():
     # Get credentials from environment variables (GitHub secrets)
-    login = os.getenv('XT_XARID_LOGIN')
-    password = os.getenv('XT_XARID_PASSWORD')
+    # login = os.getenv('XT_XARID_LOGIN')
+    # password = os.getenv('XT_XARID_PASSWORD')
+    login = "REDACTED_EMAIL"
+    password = "REDACTED_PASSWORD"
     
     if not all([login, password]):
         raise ValueError("Missing required environment variables: XT_XARID_LOGIN, XT_XARID_PASSWORD")
@@ -260,7 +262,7 @@ def start_sync():
         login=login,
         password=password,
         client_id="af36f6cbc",  # Hardcoded client_id
-        products_per_batch=10
+        products_per_batch=1
     )
     results = sync.sync_products(delay_between_requests=10.0)
     print("Sync completed:", results)

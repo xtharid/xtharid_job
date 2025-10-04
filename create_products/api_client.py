@@ -166,10 +166,25 @@ class APIClient:
         }
         return self.send_request("/urpc", payload, use_auth=True)
 
-    def update_product_field(self, proc_id: int, field_id: str, field_value: str) -> Dict[str, Any]:
+    def update_product_field(self, proc_id: int, field_id: str, field_value) -> Dict[str, Any]:
         """Update a specific field of a product by procedure ID (requires authentication)."""
         if not self.access_token and not self.refresh_token_value:
             raise Exception("No access token available. Call auth_token() first.")
+        
+        # Handle photo field specially - it needs array format with metadata
+        if field_id == "photo" and isinstance(field_value, str):
+            # Convert image ID to photo array format
+            field_value = [
+                {
+                    "id": field_value,
+                    "name": "image.jpg",  # Default name, could be improved
+                    "meta": {
+                        "type": "jpg",  # Default type, could be improved
+                        "content_type": "image/jpeg",
+                        "size": 0  # Default size, could be improved
+                    }
+                }
+            ]
             
         payload = {
             "id": 1,
