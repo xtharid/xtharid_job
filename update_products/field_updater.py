@@ -165,16 +165,34 @@ class FieldUpdater:
             field_value: New field value
             
         Returns:
-            True if successful, False otherwise
+            True if successful (HTTP 200), False otherwise
         """
         try:
             result = self.api_client.update_product_field(proc_id, field_id, field_value)
-            if "error" not in result:
+            
+            # Check if the API call was successful (HTTP 200)
+            # The API client should return the HTTP status or indicate success
+            if hasattr(result, 'status_code'):
+                # If result has status_code attribute (HTTP response)
+                if result.status_code == 200:
+                    print(f"✅ Updated field '{field_id}' to '{field_value}' for proc_id {proc_id}")
+                    return True
+                else:
+                    print(f"❌ HTTP {result.status_code} error updating field '{field_id}' for proc_id {proc_id}")
+                    return False
+            elif isinstance(result, dict):
+                # If result is a dictionary, check for error field
+                if "error" not in result:
+                    print(f"✅ Updated field '{field_id}' to '{field_value}' for proc_id {proc_id}")
+                    return True
+                else:
+                    print(f"❌ Error updating field '{field_id}' for proc_id {proc_id}: {result.get('error')}")
+                    return False
+            else:
+                # If result is not dict and no status_code, assume success
                 print(f"✅ Updated field '{field_id}' to '{field_value}' for proc_id {proc_id}")
                 return True
-            else:
-                print(f"❌ Error updating field '{field_id}' for proc_id {proc_id}: {result.get('error')}")
-                return False
+                
         except Exception as e:
             print(f"❌ Exception updating field '{field_id}' for proc_id {proc_id}: {e}")
             return False
@@ -423,7 +441,7 @@ class FieldUpdater:
             print(f"📊 Summary: {null_fields_count} null API fields, {matching_fields_count} matching fields, {len(field_updates)} fields to update")
             
             if not field_updates:
-                print(f"ℹ️  No fields need updating for {product_id}")
+                print(f"ℹ️  No fields need updating for {product_id} - marking as updated")
                 self.mark_as_updated(synced_product)
                 results["successful"] += 1
                 continue
@@ -448,19 +466,18 @@ class FieldUpdater:
                 if delay_between_fields > 0:
                     time.sleep(delay_between_fields)
             
-            # Mark as successful if at least one field was updated successfully
-            if successful_updates > 0:
+            # Mark as successful only if ALL field updates were successful (no failures)
+            if failed_updates == 0:
                 results["successful"] += 1
                 self.mark_as_updated(synced_product)
-                print(f"✅ Successfully updated {successful_updates}/{len(field_updates)} fields for {product_id}")
-                if failed_updates > 0:
-                    print(f"⚠️  Failed to update {failed_updates} fields: {', '.join(field_errors)}")
+                print(f"✅ Successfully updated ALL {successful_updates}/{len(field_updates)} fields for {product_id}")
             else:
                 results["failed"] += 1
+                print(f"❌ Failed to update {failed_updates}/{len(field_updates)} fields for {product_id}: {', '.join(field_errors)}")
                 results["errors"].append({
                     "product_id": product_id,
                     "proc_id": proc_id,
-                    "error": f"Failed to update all {len(field_updates)} fields: {', '.join(field_errors)}"
+                    "error": f"Failed to update {failed_updates} out of {len(field_updates)} fields: {', '.join(field_errors)}"
                 })
             
             # Add delay between products
