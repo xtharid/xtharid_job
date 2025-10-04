@@ -484,10 +484,8 @@ class FieldUpdater:
 # Application entry point
 def start_field_updates():
     # Get credentials from environment variables (GitHub secrets)
-    # login = os.getenv('XT_XARID_LOGIN')
-    # password = os.getenv('XT_XARID_PASSWORD')
-    login = "REDACTED_EMAIL"
-    password = "REDACTED_PASSWORD"
+    login = os.getenv('XT_XARID_LOGIN')
+    password = os.getenv('XT_XARID_PASSWORD')
     
     if not all([login, password]):
         raise ValueError("Missing required environment variables: XT_XARID_LOGIN, XT_XARID_PASSWORD")

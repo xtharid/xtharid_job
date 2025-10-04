@@ -1,14 +1,14 @@
 from peewee import *
 import os
 
-# Get the project root directory (where db.py is located)
-project_root = os.path.dirname(os.path.abspath(__file__))
-data_dir = os.path.join(project_root, "data")
-
-# Create data directory if it doesn't exist
-os.makedirs(data_dir, exist_ok=True)
-
-db = SqliteDatabase(os.path.join(data_dir, "scraper.db"))
+# MySQL database configuration
+db = MySQLDatabase(
+    os.getenv('MYSQL_DB', 'github_scrapper'),
+    user=os.getenv('MYSQL_USER', 'root'),
+    password=os.getenv('MYSQL_PASSWORD', 'password'),
+    host=os.getenv('MYSQL_HOST', 'localhost'),
+    port=int(os.getenv('MYSQL_PORT', '3306'))
+)
 
 class Product(Model):
     id = IntegerField()

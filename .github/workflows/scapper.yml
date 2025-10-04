@@ -27,9 +27,15 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests peewee
+          pip install -r requirements.txt
 
       - name: Run scraper
+        env:
+          MYSQL_DB: ${{ secrets.MYSQL_DB }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
+          MYSQL_PORT: ${{ secrets.MYSQL_PORT }}
         run: |
           python scapper/scraper.py
 
@@ -52,9 +58,4 @@ jobs:
           git pull origin main
           git push
 
-      - name: Upload database as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: scraper-database
-          path: data/scraper.db
-          retention-days: 30
+      # Database is now stored in MySQL server, no need to upload artifacts
