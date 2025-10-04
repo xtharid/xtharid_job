@@ -1,10 +1,8 @@
 # .github/workflows/scraper.yml
 name: Scraper
 
-# on:
-#   schedule:
-#     - cron: '0,30 * * * *' # every 30 minutes at :00 and :30
-#   workflow_dispatch:
+on:
+  workflow_dispatch:
 
 concurrency:
   group: database-operations
@@ -36,6 +34,11 @@ jobs:
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
           MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
           MYSQL_PORT: ${{ secrets.MYSQL_PORT }}
+          MYSQL_SSL_CA: ${{ secrets.MYSQL_SSL_CA }}
+          MYSQL_SSL_CERT: ${{ secrets.MYSQL_SSL_CERT }}
+          MYSQL_SSL_KEY: ${{ secrets.MYSQL_SSL_KEY }}
+          MYSQL_SSL_VERIFY_CERT: ${{ secrets.MYSQL_SSL_VERIFY_CERT }}
+          MYSQL_SSL_VERIFY_IDENTITY: ${{ secrets.MYSQL_SSL_VERIFY_IDENTITY }}
         run: |
           python scapper/scraper.py
 
