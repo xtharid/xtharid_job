@@ -1,0 +1,83 @@
+# .github/workflows/field_updater.yml
+name: Field Updater
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: database-operations
+  cancel-in-progress: false
+
+jobs:
+  update_fields:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Create SSL certificate files
+        env:
+          MYSQL_SSL_CA_CONTENT: ${{ secrets.MYSQL_SSL_CA }}
+          MYSQL_SSL_CERT_CONTENT: ${{ secrets.MYSQL_SSL_CERT }}
+          MYSQL_SSL_KEY_CONTENT: ${{ secrets.MYSQL_SSL_KEY }}
+        run: |
+          # Create SSL certificate files from content
+          if [ -n "$MYSQL_SSL_CA_CONTENT" ]; then
+            echo "$MYSQL_SSL_CA_CONTENT" > /tmp/ca-cert.pem
+            echo "MYSQL_SSL_CA=/tmp/ca-cert.pem" >> $GITHUB_ENV
+          fi
+          if [ -n "$MYSQL_SSL_CERT_CONTENT" ]; then
+            echo "$MYSQL_SSL_CERT_CONTENT" > /tmp/client-cert.pem
+            echo "MYSQL_SSL_CERT=/tmp/client-cert.pem" >> $GITHUB_ENV
+          fi
+          if [ -n "$MYSQL_SSL_KEY_CONTENT" ]; then
+            echo "$MYSQL_SSL_KEY_CONTENT" > /tmp/client-key.pem
+            echo "MYSQL_SSL_KEY=/tmp/client-key.pem" >> $GITHUB_ENV
+          fi
+
+      - name: Run field updater
+        env:
+          XT_XARID_LOGIN: ${{ secrets.XT_XARID_LOGIN }}
+          XT_XARID_PASSWORD: ${{ secrets.XT_XARID_PASSWORD }}
+          MYSQL_DB: ${{ secrets.MYSQL_DB }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
+          MYSQL_PORT: ${{ secrets.MYSQL_PORT }}
+          MYSQL_SSL_VERIFY_CERT: ${{ secrets.MYSQL_SSL_VERIFY_CERT }}
+          MYSQL_SSL_VERIFY_IDENTITY: ${{ secrets.MYSQL_SSL_VERIFY_IDENTITY }}
+        run: |
+          python update_products/field_updater.py
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Auto-update: Field updates completed $(date '+%Y-%m-%d %H:%M:%S')"
+          git pull origin main
+          git push
+
+      # Database is now stored in MySQL server, no need to upload artifacts
