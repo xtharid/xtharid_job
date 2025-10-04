@@ -1,10 +1,10 @@
 # .github/workflows/scraper.yml
 name: Scraper
 
-on:
-  schedule:
-    - cron: '0,30 * * * *' # every 30 minutes at :00 and :30
-  workflow_dispatch:
+# on:
+#   schedule:
+#     - cron: '0,30 * * * *' # every 30 minutes at :00 and :30
+#   workflow_dispatch:
 
 concurrency:
   group: database-operations
