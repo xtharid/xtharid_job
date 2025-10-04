@@ -25,11 +25,14 @@ class ScrapperState(Model):
 class SyncedProduct(Model):
     username = CharField()
     product_id = CharField()
+    proc_id = IntegerField()  # API procedure ID (required)
+    is_fields_updated = BooleanField(default=False)  # Track if product fields were updated
     synced_at = DateTimeField()
     class Meta:
         database = db
         indexes = (
             (('username', 'product_id'), True),  # Unique constraint
+            (('is_fields_updated',), False),     # Index for faster filtering by update status
         )        
 
 def init_db():

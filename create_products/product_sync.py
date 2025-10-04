@@ -28,12 +28,13 @@ class SyncTracker:
         except SyncedProduct.DoesNotExist:
             return False
     
-    def mark_as_synced(self, product_id: str):
+    def mark_as_synced(self, product_id: str, proc_id: int):
         """Mark a product as synced for this user."""
         try:
             SyncedProduct.create(
                 username=self.username,
                 product_id=product_id,
+                proc_id=proc_id,
                 synced_at=datetime.now()
             )
         except Exception as e:
@@ -207,9 +208,25 @@ class ProductSync:
                 })
             else:
                 results["successful"] += 1
-                # Mark as synced only if successful
-                self.sync_tracker.mark_as_synced(product_id)
-                print(f"📝 Marked {product_id} as synced for {self.login}")
+                # Extract proc_id from successful API response
+                proc_id = None
+                if "result" in api_result and "proc_id" in api_result["result"]:
+                    proc_id = api_result["result"]["proc_id"]
+                    print(f"📋 Received proc_id: {proc_id}")
+                
+                # Mark as synced only if successful and proc_id is available
+                if proc_id is not None:
+                    self.sync_tracker.mark_as_synced(product_id, proc_id)
+                    print(f"📝 Marked {product_id} as synced for {self.login} (proc_id: {proc_id})")
+                else:
+                    print(f"⚠️  No proc_id received for {product_id}, not marking as synced")
+                    results["successful"] -= 1
+                    results["failed"] += 1
+                    results["errors"].append({
+                        "product_id": product_id,
+                        "product_name": product_name,
+                        "error": "No proc_id in API response"
+                    })
             
             # Add delay between requests to avoid overwhelming the API
             if i < len(products) and delay_between_requests > 0:
