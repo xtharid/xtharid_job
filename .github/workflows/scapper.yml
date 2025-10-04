@@ -27,6 +27,26 @@ jobs:
         run: |
           pip install -r requirements.txt
 
+      - name: Create SSL certificate files
+        env:
+          MYSQL_SSL_CA_CONTENT: ${{ secrets.MYSQL_SSL_CA }}
+          MYSQL_SSL_CERT_CONTENT: ${{ secrets.MYSQL_SSL_CERT }}
+          MYSQL_SSL_KEY_CONTENT: ${{ secrets.MYSQL_SSL_KEY }}
+        run: |
+          # Create SSL certificate files from content
+          if [ -n "$MYSQL_SSL_CA_CONTENT" ]; then
+            echo "$MYSQL_SSL_CA_CONTENT" > /tmp/ca-cert.pem
+            echo "MYSQL_SSL_CA=/tmp/ca-cert.pem" >> $GITHUB_ENV
+          fi
+          if [ -n "$MYSQL_SSL_CERT_CONTENT" ]; then
+            echo "$MYSQL_SSL_CERT_CONTENT" > /tmp/client-cert.pem
+            echo "MYSQL_SSL_CERT=/tmp/client-cert.pem" >> $GITHUB_ENV
+          fi
+          if [ -n "$MYSQL_SSL_KEY_CONTENT" ]; then
+            echo "$MYSQL_SSL_KEY_CONTENT" > /tmp/client-key.pem
+            echo "MYSQL_SSL_KEY=/tmp/client-key.pem" >> $GITHUB_ENV
+          fi
+
       - name: Run scraper
         env:
           MYSQL_DB: ${{ secrets.MYSQL_DB }}
@@ -34,9 +54,6 @@ jobs:
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
           MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
           MYSQL_PORT: ${{ secrets.MYSQL_PORT }}
-          MYSQL_SSL_CA: ${{ secrets.MYSQL_SSL_CA }}
-          MYSQL_SSL_CERT: ${{ secrets.MYSQL_SSL_CERT }}
-          MYSQL_SSL_KEY: ${{ secrets.MYSQL_SSL_KEY }}
           MYSQL_SSL_VERIFY_CERT: ${{ secrets.MYSQL_SSL_VERIFY_CERT }}
           MYSQL_SSL_VERIFY_IDENTITY: ${{ secrets.MYSQL_SSL_VERIFY_IDENTITY }}
         run: |
