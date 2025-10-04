@@ -260,7 +260,7 @@ def start_sync():
         login=login,
         password=password,
         client_id="af36f6cbc",  # Hardcoded client_id
-        products_per_batch=1
+        products_per_batch=10
     )
     results = sync.sync_products(delay_between_requests=10.0)
     print("Sync completed:", results)
