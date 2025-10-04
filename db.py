@@ -33,13 +33,32 @@ class SyncedProduct(Model):
     proc_id = IntegerField()  # API procedure ID (required)
     is_fields_updated = BooleanField(default=False)  # Track if product fields were updated
     synced_at = DateTimeField()
+    last_attempt_time = DateTimeField(null=True)  # Track when field update was last attempted (for queue prioritization)
     class Meta:
         database = db
         indexes = (
             (('username', 'product_id'), True),  # Unique constraint
             (('is_fields_updated',), False),     # Index for faster filtering by update status
+            (('last_attempt_time',), False),     # Index for queue ordering
         )        
 
 def init_db():
     db.connect()
     db.create_tables([Product, ScrapperState, SyncedProduct], safe=True)
+    
+    # Migrate existing SyncedProduct table to add last_attempt_time field if it doesn't exist
+    try:
+        # Check if last_attempt_time column exists (MySQL syntax)
+        cursor = db.execute_sql("DESCRIBE SyncedProduct")
+        columns = [row[0] for row in cursor.fetchall()]
+        
+        if 'last_attempt_time' not in columns:
+            print("🔄 Adding last_attempt_time field to SyncedProduct table...")
+            db.execute_sql("ALTER TABLE SyncedProduct ADD COLUMN last_attempt_time DATETIME NULL")
+            print("✅ Migration completed successfully")
+        else:
+            print("ℹ️  last_attempt_time field already exists")
+            
+    except Exception as e:
+        print(f"⚠️  Migration warning: {e}")
+        print("ℹ️  This is normal for new databases or if the field already exists")

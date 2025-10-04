@@ -88,17 +88,20 @@ class FieldUpdater:
 
     def get_products_needing_updates(self) -> List[Dict[str, Any]]:
         """
-        Get products that need field updates.
+        Get products that need field updates, prioritizing products that haven't failed recently.
         
         Returns:
             List of dictionaries containing synced product info and product JSON data
         """
         print(f"📦 Fetching products that need field updates for user: {self.login}")
         
-        # Get synced products that need updates
+        # Get synced products that need updates, ordered by last_attempt_time (NULL first, then oldest first)
+        # This ensures products that haven't been attempted or failed long ago get priority
         synced_products = list(SyncedProduct.select().where(
             (SyncedProduct.username == self.login) & 
             (SyncedProduct.is_fields_updated == False)
+        ).order_by(
+            SyncedProduct.last_attempt_time.asc(nulls='first')
         ).limit(self.products_per_batch))
         
         print(f"✅ Found {len(synced_products)} synced products needing updates")
@@ -300,10 +303,20 @@ class FieldUpdater:
         """Mark a product as having its fields updated."""
         try:
             synced_product.is_fields_updated = True
+            synced_product.last_attempt_time = None  # Clear attempt time since it's now successful
             synced_product.save()
             print(f"📝 Marked product {synced_product.product_id} as updated")
         except Exception as e:
             print(f"⚠️  Error marking product as updated: {e}")
+
+    def mark_as_failed(self, synced_product: SyncedProduct):
+        """Mark a product as failed and update the last attempt time to push it back in queue."""
+        try:
+            synced_product.last_attempt_time = datetime.now()
+            synced_product.save()
+            print(f"📝 Marked product {synced_product.product_id} as failed - pushed back in queue")
+        except Exception as e:
+            print(f"⚠️  Error marking product as failed: {e}")
 
     def process_product_updates(self, delay_between_requests: float = 2.0, delay_between_fields: float = 0.5) -> Dict[str, Any]:
         """
@@ -348,6 +361,7 @@ class FieldUpdater:
             current_api_data = self.fetch_product_details_from_api(proc_id)
             if not current_api_data:
                 results["failed"] += 1
+                self.mark_as_failed(synced_product)  # Push failed product back in queue
                 results["errors"].append({
                     "product_id": product_id,
                     "proc_id": proc_id,
@@ -473,6 +487,7 @@ class FieldUpdater:
                 print(f"✅ Successfully updated ALL {successful_updates}/{len(field_updates)} fields for {product_id}")
             else:
                 results["failed"] += 1
+                self.mark_as_failed(synced_product)  # Push failed product back in queue
                 print(f"❌ Failed to update {failed_updates}/{len(field_updates)} fields for {product_id}: {', '.join(field_errors)}")
                 results["errors"].append({
                     "product_id": product_id,
