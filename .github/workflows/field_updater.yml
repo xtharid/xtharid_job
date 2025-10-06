@@ -2,6 +2,8 @@
 name: Field Updater
 
 on:
+  schedule:
+  - cron: '30 * * * *'
   workflow_dispatch:
 
 concurrency:

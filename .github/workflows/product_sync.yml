@@ -2,6 +2,8 @@
 name: Product Sync
 
 on:
+  schedule:
+  - cron: '15 * * * *'
   workflow_dispatch:
 
 concurrency:
