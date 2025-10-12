@@ -1,9 +1,11 @@
 import json
+from math import log
 import time
 import sys
 import os
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 # Add project root to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -58,7 +60,6 @@ class FieldUpdater:
             'license': False,  # Static license value (boolean)
             'guarantee': 1,
             'guarantee_unit': 30,
-            'best_before': '2035-10-04',
             # 'api_field': 'static_value',
             # Example: 'currency': 'UZS',
         }
@@ -66,6 +67,7 @@ class FieldUpdater:
         # Value transformation mappings (API field -> transformation function)
         self.value_transformations = {
             'price': lambda x: float(x) * 2,  # Double the price value (convert to float first)
+            'best_before': lambda: (datetime.today() + relativedelta(years=1)).strftime("%Y-%m-%d"),
             # 'api_field': lambda x: x * 2,  # Double the value
             # Example: 'amount': lambda x: x * 2,
         }
