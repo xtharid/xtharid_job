@@ -52,7 +52,7 @@ class FieldUpdater:
             # 'api_field': 'local_field',
         }
         
-        # Static value mappings (API field -> Static value)
+        # Static value mappings (API field -> Static value or lambda function)
         self.static_values = {
             'regions': ['33'],  # Static region value (string in array)
             'delivery_period': 10,  # Static delivery period value
@@ -60,7 +60,7 @@ class FieldUpdater:
             'license': False,  # Static license value (boolean)
             'guarantee': 1,
             'guarantee_unit': 30,
-            'best_before': '2035-10-04', # will be updated by value_transformations
+            'best_before': lambda: (datetime.today() + relativedelta(years=1)).strftime("%Y-%m-%d"),
             # 'api_field': 'static_value',
             # Example: 'currency': 'UZS',
         }
@@ -68,7 +68,6 @@ class FieldUpdater:
         # Value transformation mappings (API field -> transformation function)
         self.value_transformations = {
             'price': lambda x: float(x) * 2,  # Double the price value (convert to float first)
-            'best_before': lambda _: (datetime.today() + relativedelta(years=1)).strftime("%Y-%m-%d"),
             # 'api_field': lambda x: x * 2,  # Double the value
             # Example: 'amount': lambda x: x * 2,
         }
@@ -219,8 +218,22 @@ class FieldUpdater:
         
         # Check for static values first
         if api_field_name in self.static_values:
-            value = self.static_values[api_field_name]
-            print(f"🔧 Using static value for {api_field_name}: {value}")
+            static_value = self.static_values[api_field_name]
+            
+            # Check if it's a lambda function (callable)
+            if callable(static_value):
+                try:
+                    # Call the lambda function to get the value
+                    value = static_value()
+                    print(f"🔧 Generated static value for {api_field_name}: {value}")
+                except Exception as e:
+                    print(f"⚠️  Error generating static value for {api_field_name}: {e}")
+                    return None
+            else:
+                # It's a regular static value
+                value = static_value
+                print(f"🔧 Using static value for {api_field_name}: {value}")
+            
             return self._convert_value_for_api(value, field_info)
         
         # Check for field mappings
