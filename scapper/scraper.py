@@ -12,6 +12,9 @@ def scrape_and_save():
     # Initialize database
     init_db()
     
+    # List of main_id prefixes to exclude (first part before the first dot)
+    excluded_prefixes = ['10']
+    
     # Get current offset from ScrapperState
     state, created = ScrapperState.get_or_create(id=1, defaults={'offset': 0})
     current_offset = state.offset
@@ -41,12 +44,22 @@ def scrape_and_save():
             
             saved_count = 0
             skipped_count = 0
+            excluded_count = 0
             for product_data in products:
                 try:
                     # Extract product_id from nested product info, fallback to main id
                     product_info = product_data.get('product', {})
                     product_id = product_info.get('product_id', str(product_data.get('id', '')))
                     main_id = product_data.get('id', 0)
+                    
+                    # Check if main_id should be excluded based on prefix
+                    main_id_str = str(main_id)
+                    if '.' in main_id_str:
+                        first_part = main_id_str.split('.')[0]
+                        if first_part in excluded_prefixes:
+                            excluded_count += 1
+                            print(f"✗ Excluded product (prefix {first_part}): {product_data.get('product_name', 'Unknown')} (main_id: {main_id})")
+                            continue
                     
                     # Check if product already exists by either product_id or id
                     existing_by_product_id = Product.select().where(Product.product_id == product_id).exists()
@@ -77,6 +90,7 @@ def scrape_and_save():
             
             print(f"\nTotal new products saved: {saved_count}")
             print(f"Total products skipped (already exist): {skipped_count}")
+            print(f"Total products excluded: {excluded_count}")
             print(f"Next offset: {new_offset}")
         else:
             print("No products found in response")
