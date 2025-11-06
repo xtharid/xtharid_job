@@ -31,7 +31,7 @@ def scrape_and_save():
         "params": {
             "ref": "online_shop_contract_public_registry",
             "op": "read",
-            "limit": 100,
+            "limit": 50,
             "offset": current_offset,
             "filters": {
                 "nad": False
@@ -74,7 +74,7 @@ def scrape_and_save():
         "params": {
             "ref": "ref_online_shop_public",
             "op": "read",
-            "limit": 100,
+            "limit": 50,
             "offset": 0,
             "filters": {
                 "is_national": False,
