@@ -61,9 +61,9 @@ class FieldUpdater:
             'guarantee': 1,
             'guarantee_unit': 30,
             'best_before': lambda: (datetime.today() + relativedelta(years=1)).strftime("%Y-%m-%d"),
-            'amount': 10,
+            'amount': 100,
             'min_amount': 1,
-            'max_amount': 10,
+            'max_amount': 100,
             # 'api_field': 'static_value',
             # Example: 'currency': 'UZS',
         }
