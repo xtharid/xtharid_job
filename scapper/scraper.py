@@ -144,6 +144,12 @@ def scrape_and_save():
     if first_call_success and second_call_success:
         contract_results = contract_data.get('result', [])
         new_offset = current_offset + len(contract_results)
+        
+        # Reset offset to 0 if it exceeds 2000
+        if new_offset >= 2000:
+            new_offset = 0
+            print(f"Offset exceeded 2000, resetting to 0")
+        
         state.offset = new_offset
         state.save()
         
