@@ -531,26 +531,23 @@ class FieldUpdater:
                 # Get current value from API
                 api_value = field_info.get('value')
                 
-                # Check if field needs updating (null, empty array, or empty string)
-                needs_update = False
+                # Log current API value for reference (but don't check if it's null - we'll update anyway)
                 if api_value is None:
-                    needs_update = True
                     null_fields_count += 1
-                    print(f"🔍 API field '{field_name}' is null")
+                    print(f"🔍 API field '{field_name}' is null (will update anyway if mapped value found)")
                 elif field_name in ['photo', 'regions'] and isinstance(api_value, list) and len(api_value) == 0:
-                    needs_update = True
                     null_fields_count += 1
-                    print(f"🔍 API field '{field_name}' is empty array")
+                    print(f"🔍 API field '{field_name}' is empty array (will update anyway if mapped value found)")
                 elif field_name == 'producer' and api_value == "":
-                    needs_update = True
                     null_fields_count += 1
-                    print(f"🔍 API field '{field_name}' is empty string")
+                    print(f"🔍 API field '{field_name}' is empty string (will update anyway if mapped value found)")
+                else:
+                    print(f"🔍 API field '{field_name}' has value: {api_value} (will update anyway if mapped value found)")
                 
-                # Debug for price field - show API value and update status
+                # Debug for price field - show API value
                 if field_name == 'price':
                     print(f"🔍 PRICE FIELD DEBUG - Update check")
                     print(f"   - API price value: {api_value} (type: {type(api_value)})")
-                    print(f"   - needs_update: {needs_update}")
                     print(f"   - About to call _map_field_value with local_product_data")
                 
                 # Get corresponding value from local data using mapper
@@ -561,8 +558,7 @@ class FieldUpdater:
                     print(f"🔍 PRICE FIELD DEBUG - After mapping")
                     print(f"   - mapped_value: {mapped_value} (type: {type(mapped_value)})")
                     print(f"   - mapped_value is not None: {mapped_value is not None}")
-                    print(f"   - needs_update: {needs_update}")
-                    print(f"   - Will be added to updates: {needs_update and mapped_value is not None}")
+                    print(f"   - Will be added to updates: {mapped_value is not None}")
                 
                 # Special debug for license field mapping
                 if field_name == 'license':
@@ -575,18 +571,18 @@ class FieldUpdater:
                     matching_fields_count += 1
                     print(f"🔍 Field '{field_name}' mapped successfully: API={api_value}, Mapped={mapped_value}")
                 
-                # Check if field needs updating and we have a mapped value
-                if needs_update and mapped_value is not None:
+                # Update field if we have a mapped value (regardless of current API value)
+                if mapped_value is not None:
                     field_updates.append({
                         "field_id": field_name,
                         "field_value": mapped_value
                     })
-                    print(f"📝 Found field to update: {field_name} (empty -> {mapped_value})")
+                    print(f"📝 Found field to update: {field_name} (current: {api_value} -> new: {mapped_value})")
             
-            print(f"📊 Summary: {null_fields_count} null API fields, {matching_fields_count} matching fields, {len(field_updates)} fields to update")
+            print(f"📊 Summary: {null_fields_count} null/empty API fields found, {matching_fields_count} matching fields mapped, {len(field_updates)} fields to update (updating all fields with mapped values regardless of current API value)")
             
             if not field_updates:
-                print(f"ℹ️  No fields need updating for {product_id} - marking as updated")
+                print(f"ℹ️  No mapped values found for {product_id} - marking as updated")
                 self.mark_as_updated(synced_product)
                 results["successful"] += 1
                 continue
