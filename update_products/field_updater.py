@@ -217,6 +217,31 @@ class FieldUpdater:
         Returns:
             Mapped and converted value for API, or None if no mapping found
         """
+        # Debug logging for price field
+        if api_field_name == 'price':
+            print(f"🔍 PRICE MAPPING DEBUG - _map_field_value called")
+            print(f"   - api_field_name: {api_field_name}")
+            print(f"   - local_data type: {type(local_data)}")
+            print(f"   - local_data keys: {list(local_data.keys())[:30] if isinstance(local_data, dict) else 'Not a dict'}")
+            print(f"   - price in static_values: {api_field_name in self.static_values}")
+            print(f"   - price in field_mappings: {api_field_name in self.field_mappings}")
+            print(f"   - price in value_transformations: {api_field_name in self.value_transformations}")
+            if isinstance(local_data, dict):
+                if 'price' in local_data:
+                    print(f"   - Found 'price' at root level: {local_data.get('price')}")
+                if 'contragent' in local_data:
+                    contragent = local_data.get('contragent', {})
+                    if isinstance(contragent, dict):
+                        print(f"   - contragent keys: {list(contragent.keys())[:20]}")
+                        if 'price' in contragent:
+                            print(f"   - Found 'price' in contragent: {contragent.get('price')}")
+                if 'product' in local_data:
+                    product = local_data.get('product', {})
+                    if isinstance(product, dict):
+                        print(f"   - product keys: {list(product.keys())[:20]}")
+                        if 'price' in product:
+                            print(f"   - Found 'price' in product: {product.get('price')}")
+        
         # Use class-level field mapping configurations
         
         # Check for static values first
@@ -242,6 +267,12 @@ class FieldUpdater:
         # Check for field mappings
         local_field_name = self.field_mappings.get(api_field_name, api_field_name)
         
+        # Debug for price field - show mapping decision
+        if api_field_name == 'price':
+            print(f"🔍 PRICE MAPPING DEBUG - After field mappings check")
+            print(f"   - local_field_name: {local_field_name}")
+            print(f"   - Will look for '{local_field_name}' in local_data")
+        
         # Special handling for specific fields
         if api_field_name == 'photo' and local_field_name == 'images':
             # Take first image from images array
@@ -255,8 +286,16 @@ class FieldUpdater:
                 return None
         
         # Get value from local data
+        if api_field_name == 'price':
+            print(f"🔍 PRICE MAPPING DEBUG - Checking if '{local_field_name}' in local_data")
+            print(f"   - '{local_field_name}' in local_data: {local_field_name in local_data if isinstance(local_data, dict) else False}")
+        
         if local_field_name in local_data:
             value = local_data[local_field_name]
+            
+            if api_field_name == 'price':
+                print(f"🔍 PRICE MAPPING DEBUG - Found value in local_data")
+                print(f"   - Raw value: {value} (type: {type(value)})")
             
             # Apply value transformation if configured
             if api_field_name in self.value_transformations:
@@ -264,11 +303,23 @@ class FieldUpdater:
                     original_value = value
                     value = self.value_transformations[api_field_name](value)
                     print(f"🔧 Transformed {api_field_name}: {original_value} -> {value}")
+                    if api_field_name == 'price':
+                        print(f"🔍 PRICE MAPPING DEBUG - After transformation: {value}")
                 except Exception as e:
                     print(f"⚠️  Error transforming {api_field_name}: {e}")
+                    if api_field_name == 'price':
+                        print(f"🔍 PRICE MAPPING DEBUG - Transformation failed: {e}")
                     return None
             
-            return self._convert_value_for_api(value, field_info)
+            converted_value = self._convert_value_for_api(value, field_info)
+            if api_field_name == 'price':
+                print(f"🔍 PRICE MAPPING DEBUG - After conversion: {converted_value} (type: {type(converted_value)})")
+            return converted_value
+        
+        # Debug for price when not found
+        if api_field_name == 'price':
+            print(f"🔍 PRICE MAPPING DEBUG - '{local_field_name}' NOT found in local_data")
+            print(f"   - Returning None")
         
         return None
 
@@ -403,11 +454,43 @@ class FieldUpdater:
             print(f"🔍 Sample API fields: {list(api_fields.keys())[:10]}")
             print(f"🔍 Sample local fields: {list(local_product_data.keys())[:10]}")
             
+            # Debug: Show price-related structure
+            print(f"🔍 PRICE STRUCTURE DEBUG - Full local_product_data structure:")
+            print(f"   - Top-level keys: {list(local_product_data.keys()) if isinstance(local_product_data, dict) else 'Not a dict'}")
+            if isinstance(local_product_data, dict):
+                if 'price' in local_product_data:
+                    print(f"   - Found 'price' at root: {local_product_data.get('price')}")
+                if 'contragent' in local_product_data:
+                    contragent = local_product_data.get('contragent', {})
+                    print(f"   - contragent type: {type(contragent)}")
+                    if isinstance(contragent, dict):
+                        print(f"   - contragent keys: {list(contragent.keys())[:30]}")
+                        if 'price' in contragent:
+                            print(f"   - Found 'price' in contragent: {contragent.get('price')}")
+                if 'product' in local_product_data:
+                    product = local_product_data.get('product', {})
+                    print(f"   - product type: {type(product)}")
+                    if isinstance(product, dict):
+                        print(f"   - product keys: {list(product.keys())[:30]}")
+                        if 'price' in product:
+                            print(f"   - Found 'price' in product: {product.get('price')}")
+            
             # Debug: Show all null API fields
             print(f"🔍 All null API fields:")
             for field_name, field_info in api_fields.items():
                 if field_info.get('__field__', False) and field_info.get('value') is None:
                     print(f"   - {field_name}")
+            
+            # Debug: Check if price field exists in API fields
+            if 'price' in api_fields:
+                price_info = api_fields['price']
+                print(f"🔍 PRICE FIELD EXISTS IN API FIELDS:")
+                print(f"   - price field info: {price_info}")
+                print(f"   - price __field__: {price_info.get('__field__', False)}")
+                print(f"   - price value: {price_info.get('value')} (type: {type(price_info.get('value'))})")
+            else:
+                print(f"🔍 PRICE FIELD NOT FOUND IN API FIELDS")
+                print(f"   - Available fields: {list(api_fields.keys())[:50]}")
             
             # Special debug for license field
             if 'license' in api_fields:
@@ -426,17 +509,31 @@ class FieldUpdater:
             matching_fields_count = 0
             
             for field_name, field_info in api_fields.items():
+                # Debug for price field - check if it's being processed
+                if field_name == 'price':
+                    print(f"🔍 PRICE FIELD DEBUG - Processing price field")
+                    print(f"   - field_name: {field_name}")
+                    print(f"   - __field__: {field_info.get('__field__', False)}")
+                    print(f"   - in static_values: {field_name in self.static_values}")
+                    print(f"   - in field_mappings: {field_name in self.field_mappings}")
+                    print(f"   - in value_transformations: {field_name in self.value_transformations}")
+                
                 # Skip system fields and fields that don't have __field__ = true
                 # Exception: process fields that are in our static values or field mappings
                 if not field_info.get('__field__', False) and field_name not in self.static_values and field_name not in self.field_mappings:
+                    if field_name == 'price':
+                        print(f"🔍 PRICE FIELD DEBUG - SKIPPED (not __field__ and not in static_values/field_mappings)")
                     continue
+                
+                if field_name == 'price':
+                    print(f"🔍 PRICE FIELD DEBUG - Field passed filter, continuing processing")
                 
                 # Get current value from API
                 api_value = field_info.get('value')
                 
                 # Check if field needs updating (null, empty array, or empty string)
                 needs_update = False
-                if api_value is None or field_name == 'price':
+                if api_value is None:
                     needs_update = True
                     null_fields_count += 1
                     print(f"🔍 API field '{field_name}' is null")
@@ -449,8 +546,23 @@ class FieldUpdater:
                     null_fields_count += 1
                     print(f"🔍 API field '{field_name}' is empty string")
                 
+                # Debug for price field - show API value and update status
+                if field_name == 'price':
+                    print(f"🔍 PRICE FIELD DEBUG - Update check")
+                    print(f"   - API price value: {api_value} (type: {type(api_value)})")
+                    print(f"   - needs_update: {needs_update}")
+                    print(f"   - About to call _map_field_value with local_product_data")
+                
                 # Get corresponding value from local data using mapper
                 mapped_value = self._map_field_value(field_name, local_product_data, field_info)
+                
+                # Debug for price field - show mapping result
+                if field_name == 'price':
+                    print(f"🔍 PRICE FIELD DEBUG - After mapping")
+                    print(f"   - mapped_value: {mapped_value} (type: {type(mapped_value)})")
+                    print(f"   - mapped_value is not None: {mapped_value is not None}")
+                    print(f"   - needs_update: {needs_update}")
+                    print(f"   - Will be added to updates: {needs_update and mapped_value is not None}")
                 
                 # Special debug for license field mapping
                 if field_name == 'license':
@@ -546,7 +658,7 @@ def start_field_updates():
         login=login,
         password=password,
         client_id="af36f6cbc",  # Hardcoded client_id
-        products_per_batch=10  # Fetch only 5 products as requested
+        products_per_batch=1  # Fetch only 5 products as requested
     )
     results = updater.process_product_updates(delay_between_requests=10.0, delay_between_fields=0.5)
     print("Field updates completed:", results)
