@@ -519,10 +519,10 @@ class FieldUpdater:
                     print(f"   - in value_transformations: {field_name in self.value_transformations}")
                 
                 # Skip system fields and fields that don't have __field__ = true
-                # Exception: process fields that are in our static values or field mappings
-                if not field_info.get('__field__', False) and field_name not in self.static_values and field_name not in self.field_mappings:
+                # Exception: process fields that are in our static values, field mappings, or value transformations
+                if not field_info.get('__field__', False) and field_name not in self.static_values and field_name not in self.field_mappings and field_name not in self.value_transformations:
                     if field_name == 'price':
-                        print(f"🔍 PRICE FIELD DEBUG - SKIPPED (not __field__ and not in static_values/field_mappings)")
+                        print(f"🔍 PRICE FIELD DEBUG - SKIPPED (not __field__ and not in static_values/field_mappings/value_transformations)")
                     continue
                 
                 if field_name == 'price':
