@@ -436,7 +436,7 @@ class FieldUpdater:
                 
                 # Check if field needs updating (null, empty array, or empty string)
                 needs_update = False
-                if api_value is None:
+                if api_value is None or field_name == 'price':
                     needs_update = True
                     null_fields_count += 1
                     print(f"🔍 API field '{field_name}' is null")
